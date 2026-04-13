@@ -12,7 +12,6 @@
 - PHP 8.4+
 - Laravel 13
 - Composer 2
-- Node.js + npm (для Vite/режима разработки)
 - SQLite (база по умолчанию)
 
 ## Быстрый запуск (минимально)
@@ -59,25 +58,6 @@ php artisan test
 php artisan migrate:status
 php artisan route:list
 ```
-
-## Частые проблемы
-
-### `php` / `composer` / `node` не распознаны
-
-- Убедитесь, что инструменты установлены.
-- Проверьте, что они добавлены в `PATH`.
-- Перезапустите терминал после установки.
-
-### Ошибка `composer install` по версии PHP
-
-Если видите, что зависимости требуют `php >= 8.4`, используйте PHP 8.4+.
-
-### Ошибка SQLite `could not find driver`
-
-В `php.ini` должны быть включены расширения:
-
-- `extension=pdo_sqlite`
-- `extension=sqlite3`
 
 ## Текущее состояние проекта
 
