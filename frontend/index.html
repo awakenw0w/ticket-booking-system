@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket Booking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="orb orb-a" aria-hidden="true"></div>
+    <div class="orb orb-b" aria-hidden="true"></div>
+
+    <main class="shell">
+      <header class="hero">
+        <p class="kicker">Ticket Booking System</p>
+        <h1>Сервис бронирования и продажи билетов</h1>
+        <p class="lead">
+          Фронтенд находится в разработке. Это минимальная заглушка, чтобы
+          проект выглядел живым и был удобен для проверки.
+        </p>
+
+        <div class="actions">
+          <a
+            class="btn btn-primary"
+            href="http://127.0.0.1:8000"
+            target="_blank"
+            rel="noreferrer"
+            >Открыть backend</a
+          >
+          <button id="checkBackend" class="btn btn-ghost" type="button">
+            Проверить backend
+          </button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>Статус окружения</h2>
+        <ul class="status-list">
+          <li>
+            <span>Frontend</span>
+            <strong>Заглушка активна</strong>
+          </li>
+          <li>
+            <span>Backend URL</span>
+            <code>http://127.0.0.1:8000</code>
+          </li>
+          <li>
+            <span>Проверка</span>
+            <strong id="statusBadge" class="badge">Не проверено</strong>
+          </li>
+        </ul>
+        <p id="statusText" class="muted">
+          Нажмите «Проверить backend», чтобы проверить доступность сервера.
+        </p>
+      </section>
+
+      <footer class="foot">
+        Быстров Егор 3-1ИС <time id="buildTime"></time>
+      </footer>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
