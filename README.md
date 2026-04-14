@@ -1,65 +1,34 @@
 # Ticket Booking System
 
-Курсовой проект: информационная система бронирования и продажи билетов на мероприятия.
+Курсовой проект "Разработка информационной системы бронирования и продажи доступа на концертные мероприятия с различными категориями зон."
 
-## Что внутри
+## Что нужно установить
 
-- `backend/` — Laravel API/приложение (PHP + SQLite по умолчанию).
-- `frontend/` — минимальная фронтенд-заглушка на HTML/CSS/JS.
-
-## Технологии
-
+- Git
 - PHP 8.4+
-- Laravel 13
 - Composer 2
-- SQLite (база по умолчанию)
+- Node.js 20+ (только если нужен режим `composer run dev`)
 
-## Быстрый запуск (минимально)
-
-Команды для PowerShell:
+## Быстрый запуск на вашем ПК
 
 ```powershell
-cd backend
+git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ>
+cd ticket-booking-system\backend
+
 composer install
 Copy-Item .env.example .env -Force
 php artisan key:generate
+
 New-Item .\database\database.sqlite -ItemType File -Force | Out-Null
 php artisan migrate
-php artisan serve
+
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-После запуска откройте:
+Откройте backend:
 
-`http://127.0.0.1:8000`
+`http://127.0.0.1:8000/`
 
-## Режим разработки (backend + Vite)
+## Frontend
 
-```powershell
-cd backend
-npm install
-composer run dev
-```
-
-Эта команда поднимает сразу несколько процессов (Laravel server, queue, logs, vite).
-
-## Frontend-заглушка
-
-Файл заглушки:
-
-- `frontend/index.html`
-
-Можно открыть напрямую в браузере или через любой простой статический сервер.
-
-## Полезные команды
-
-```powershell
-cd backend
-php artisan test
-php artisan migrate:status
-php artisan route:list
-```
-
-## Текущее состояние проекта
-
-- Backend запускается и миграции применяются.
-- Frontend пока в виде минимальной заглушки.
+Откройте `frontend/index.html` в браузере и нажмите кнопку «Открыть backend».
