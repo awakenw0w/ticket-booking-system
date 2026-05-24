@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\TicketCategory;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ValidationErrorTest extends TestCase
@@ -17,7 +21,7 @@ class ValidationErrorTest extends TestCase
             'location' => '',
             'starts_at' => 'wrong-date',
             'status' => 'bad-status',
-        ]);
+        ], $this->authHeaders('admin'));
 
         $response
             ->assertUnprocessable()
@@ -36,7 +40,7 @@ class ValidationErrorTest extends TestCase
             'name' => '',
             'price' => -10,
             'quantity' => 0,
-        ]);
+        ], $this->authHeaders('admin'));
 
         $response
             ->assertUnprocessable()
@@ -53,7 +57,7 @@ class ValidationErrorTest extends TestCase
             'customer_email' => 'bad-email',
             'customer_phone' => '',
             'quantity' => 0,
-        ]);
+        ], $this->authHeaders('client'));
 
         $response
             ->assertUnprocessable()
@@ -74,7 +78,7 @@ class ValidationErrorTest extends TestCase
             'customer_email' => 'client@example.com',
             'customer_phone' => '+79990000000',
             'quantity' => $category->availableQuantity() + 1,
-        ]);
+        ], $this->authHeaders('client'));
 
         $response
             ->assertUnprocessable()
@@ -84,12 +88,35 @@ class ValidationErrorTest extends TestCase
 
     public function test_reports_api_returns_validation_messages(): void
     {
-        $response = $this->getJson('/api/reports/bookings?date_from=bad-date&status=wrong');
+        $response = $this->getJson('/api/reports/bookings?date_from=bad-date&status=wrong', $this->authHeaders('admin'));
 
         $response
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['date_from', 'status'])
             ->assertJsonPath('errors.date_from.0', 'Дата начала периода должна быть корректной.')
             ->assertJsonPath('errors.status.0', 'Выберите корректный статус бронирования.');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function authHeaders(string $roleSlug): array
+    {
+        $role = Role::query()->firstOrCreate(
+            ['slug' => $roleSlug],
+            ['name' => ucfirst($roleSlug)],
+        );
+
+        $user = User::query()->create([
+            'role_id' => $role->id,
+            'name' => "{$roleSlug}_validation_user_".Str::random(6),
+            'email' => "{$roleSlug}_".Str::random(6).'@example.com',
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(64),
+        ]);
+
+        return [
+            'Authorization' => "Bearer {$user->remember_token}",
+        ];
     }
 }

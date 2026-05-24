@@ -39,8 +39,8 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'role_id' => $adminRole->id,
-                'name' => 'Администратор системы',
-                'password' => Hash::make('password'),
+                'name' => 'admin',
+                'password' => Hash::make('admin'),
             ]
         );
 
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
             [
                 'role_id' => $clientRole->id,
                 'name' => 'Иван Петров',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('client'),
             ]
         );
 

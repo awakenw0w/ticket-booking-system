@@ -12,8 +12,11 @@ class BookingController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = $request->attributes->get('api_user');
+
         $bookings = Booking::query()
             ->with(['user.role', 'ticketCategory.event'])
+            ->when($user->role?->slug !== 'admin', fn ($query) => $query->where('user_id', $user->id))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('customer_email'), fn ($query) => $query->where('customer_email', $request->string('customer_email')))
             ->when($request->filled('event_id'), function ($query) use ($request) {
@@ -28,8 +31,9 @@ class BookingController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->attributes->get('api_user');
+
         $data = $request->validate([
-            'user_id' => ['nullable', 'exists:users,id'],
             'ticket_category_id' => ['required', 'exists:ticket_categories,id'],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['required', 'email', 'max:255'],
@@ -45,6 +49,7 @@ class BookingController extends Controller
 
         $booking = Booking::query()->create([
             ...$data,
+            'user_id' => $user->id,
             'status' => 'reserved',
             'total_price' => $ticketCategory->price * $data['quantity'],
             'reserved_at' => now(),
@@ -53,13 +58,21 @@ class BookingController extends Controller
         return response()->json($this->bookingData($booking), 201);
     }
 
-    public function show(Booking $booking): JsonResponse
+    public function show(Request $request, Booking $booking): JsonResponse
     {
+        if (! $this->canManageBooking($request, $booking)) {
+            return $this->forbiddenResponse();
+        }
+
         return response()->json($this->bookingData($booking));
     }
 
     public function update(Request $request, Booking $booking): JsonResponse
     {
+        if (! $this->canManageBooking($request, $booking)) {
+            return $this->forbiddenResponse();
+        }
+
         if ($booking->status !== 'reserved') {
             return response()->json([
                 'message' => 'Изменять можно только активное бронирование.',
@@ -100,8 +113,12 @@ class BookingController extends Controller
         return response()->json($this->bookingData($booking->refresh()));
     }
 
-    public function destroy(Booking $booking): JsonResponse
+    public function destroy(Request $request, Booking $booking): JsonResponse
     {
+        if (! $this->canManageBooking($request, $booking)) {
+            return $this->forbiddenResponse();
+        }
+
         if ($booking->status === 'paid') {
             return response()->json([
                 'message' => 'Нельзя удалить оплаченное бронирование.',
@@ -113,8 +130,12 @@ class BookingController extends Controller
         return response()->json(null, 204);
     }
 
-    public function cancel(Booking $booking): JsonResponse
+    public function cancel(Request $request, Booking $booking): JsonResponse
     {
+        if (! $this->canManageBooking($request, $booking)) {
+            return $this->forbiddenResponse();
+        }
+
         if ($booking->status !== 'reserved') {
             return response()->json([
                 'message' => 'Отменить можно только активное бронирование.',
@@ -129,8 +150,12 @@ class BookingController extends Controller
         return response()->json($this->bookingData($booking->refresh()));
     }
 
-    public function pay(Booking $booking): JsonResponse
+    public function pay(Request $request, Booking $booking): JsonResponse
     {
+        if (! $this->canManageBooking($request, $booking)) {
+            return $this->forbiddenResponse();
+        }
+
         if ($booking->status !== 'reserved') {
             return response()->json([
                 'message' => 'Оплатить можно только активное бронирование.',
@@ -174,6 +199,20 @@ class BookingController extends Controller
             'quantity.integer' => 'Количество билетов должно быть целым числом.',
             'quantity.min' => 'Количество билетов должно быть больше 0.',
         ];
+    }
+
+    private function canManageBooking(Request $request, Booking $booking): bool
+    {
+        $user = $request->attributes->get('api_user');
+
+        return $user->role?->slug === 'admin' || $booking->user_id === $user->id;
+    }
+
+    private function forbiddenResponse(): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Недостаточно прав для работы с этим бронированием.',
+        ], 403);
     }
 
     /**

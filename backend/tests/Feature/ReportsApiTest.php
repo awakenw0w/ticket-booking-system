@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ReportsApiTest extends TestCase
@@ -13,7 +17,7 @@ class ReportsApiTest extends TestCase
     {
         $this->seed();
 
-        $response = $this->getJson('/api/reports/bookings');
+        $response = $this->getJson('/api/reports/bookings', $this->adminHeaders());
 
         $response
             ->assertOk()
@@ -32,7 +36,7 @@ class ReportsApiTest extends TestCase
     {
         $this->seed();
 
-        $response = $this->getJson('/api/reports/revenue');
+        $response = $this->getJson('/api/reports/revenue', $this->adminHeaders());
 
         $response
             ->assertOk()
@@ -47,7 +51,7 @@ class ReportsApiTest extends TestCase
     {
         $this->seed();
 
-        $response = $this->getJson('/api/reports/events-occupancy');
+        $response = $this->getJson('/api/reports/events-occupancy', $this->adminHeaders());
 
         $response->assertOk();
 
@@ -65,5 +69,28 @@ class ReportsApiTest extends TestCase
         $this->assertSame(160, $theater['total_tickets']);
         $this->assertSame(3, $theater['reserved_tickets']);
         $this->assertSame(157, $theater['available_tickets']);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function adminHeaders(): array
+    {
+        $role = Role::query()->firstOrCreate(
+            ['slug' => 'admin'],
+            ['name' => 'Администратор'],
+        );
+
+        $user = User::query()->create([
+            'role_id' => $role->id,
+            'name' => 'test_admin',
+            'email' => 'test-admin@example.com',
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(64),
+        ]);
+
+        return [
+            'Authorization' => "Bearer {$user->remember_token}",
+        ];
     }
 }
