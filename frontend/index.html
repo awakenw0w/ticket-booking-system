@@ -12,24 +12,65 @@
         <p class="small-title">Ticket Booking System</p>
         <h1>Бронирование билетов</h1>
       </div>
-      <div class="topbar__right">
-        <span id="apiStatus" class="status">API не проверен</span>
-        <button id="refreshButton" class="button" type="button">Обновить</button>
-      </div>
+      <div id="userPanel" class="user-panel"></div>
     </header>
 
     <nav class="nav" aria-label="Разделы системы">
       <button class="nav__button" type="button" data-page="events">Мероприятия</button>
-      <button class="nav__button" type="button" data-page="cabinet">Личный кабинет</button>
-      <button class="nav__button" type="button" data-page="admin">Админка</button>
-      <button class="nav__button" type="button" data-page="reports">Отчеты</button>
+      <button class="nav__button" type="button" data-page="login" data-auth="guest">Вход</button>
+      <button class="nav__button" type="button" data-page="register" data-auth="guest">Регистрация</button>
+      <button class="nav__button" type="button" data-page="cabinet" data-auth="user">Личный кабинет</button>
+      <button class="nav__button" type="button" data-page="admin" data-auth="admin">Админка</button>
+      <button class="nav__button" type="button" data-page="reports" data-auth="admin">Отчеты</button>
     </nav>
 
     <main class="page-wrap">
+      <section id="page-login" class="page">
+        <section class="panel auth-panel">
+          <p class="small-title">Авторизация</p>
+          <h2>Вход</h2>
+          <form id="loginForm" class="form" novalidate>
+            <label>
+              Логин или почта
+              <input name="login" type="text" placeholder="admin" autocomplete="username" />
+            </label>
+            <label>
+              Пароль
+              <input name="password" type="password" placeholder="admin" autocomplete="current-password" />
+            </label>
+            <button class="button button--primary" type="submit">Войти</button>
+          </form>
+          <div id="loginMessage" class="message" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="page-register" class="page">
+        <section class="panel auth-panel">
+          <p class="small-title">Новый пользователь</p>
+          <h2>Регистрация</h2>
+          <form id="registerForm" class="form" novalidate>
+            <label>
+              Имя
+              <input name="name" type="text" autocomplete="name" />
+            </label>
+            <label>
+              Почта
+              <input name="email" type="email" autocomplete="email" />
+            </label>
+            <label>
+              Пароль
+              <input name="password" type="password" autocomplete="new-password" />
+            </label>
+            <button class="button button--primary" type="submit">Зарегистрироваться</button>
+          </form>
+          <div id="registerMessage" class="message" aria-live="polite"></div>
+        </section>
+      </section>
+
       <section id="page-events" class="page">
         <div class="section-title">
           <div>
-            <p class="small-title">Клиентская часть</p>
+            <p class="small-title">Каталог</p>
             <h2>Мероприятия и бронирование</h2>
           </div>
         </div>
@@ -92,21 +133,14 @@
       <section id="page-cabinet" class="page">
         <div class="section-title">
           <div>
-            <p class="small-title">Клиент</p>
+            <p class="small-title">Пользователь</p>
             <h2>Личный кабинет</h2>
           </div>
         </div>
 
         <section class="panel">
-          <h3>Найти свои бронирования</h3>
-          <form id="cabinetForm" class="form form--inline" novalidate>
-            <label>
-              Почта клиента
-              <input name="customer_email" type="email" placeholder="client@example.com" autocomplete="email" />
-            </label>
-            <button class="button button--primary" type="submit">Показать</button>
-          </form>
-          <div id="cabinetMessage" class="message" aria-live="polite"></div>
+          <h3>Профиль</h3>
+          <div id="profileInfo" class="cards"></div>
         </section>
 
         <section class="panel">
@@ -118,8 +152,12 @@
       <section id="page-admin" class="page">
         <div class="section-title">
           <div>
-            <p class="small-title">Администратор</p>
+            <p class="small-title">Только для администратора</p>
             <h2>Админка</h2>
+          </div>
+          <div class="panel-header">
+            <span id="adminApiStatus" class="status">API не проверен</span>
+            <button id="checkApiButton" class="button" type="button">Проверить API</button>
           </div>
         </div>
 
@@ -207,7 +245,7 @@
       <section id="page-reports" class="page">
         <div class="section-title">
           <div>
-            <p class="small-title">Администратор</p>
+            <p class="small-title">Только для администратора</p>
             <h2>Отчеты</h2>
           </div>
         </div>

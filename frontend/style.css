@@ -55,12 +55,21 @@ textarea {
 }
 
 .topbar__right,
+.user-panel,
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.user-panel {
+  justify-content: flex-end;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .small-title {
@@ -120,6 +129,16 @@ textarea {
   max-width: 1180px;
   margin: 0 auto;
   padding: 18px;
+}
+
+.auth-panel {
+  max-width: 440px;
+  margin: 24px auto 0;
+}
+
+.auth-panel h2 {
+  margin: 0 0 14px;
+  font-size: 24px;
 }
 
 .page {
