@@ -17,6 +17,7 @@
 - Composer
 - SQLite
 - HTML, CSS, JavaScript
+- Vercel для статического frontend-деплоя
 
 ## Структура проекта
 
@@ -66,3 +67,10 @@ php artisan test
 ```
 
 Frontend использует API по адресу `http://127.0.0.1:8000/api`.
+
+## Сборка frontend для Vercel
+
+```powershell
+npm install
+npm run build
+```
