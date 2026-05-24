@@ -60,6 +60,15 @@ function formatMoney(value) {
   return moneyFormatter.format(Number(value || 0));
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function setApiStatus(text, modifier = "idle") {
   elements.apiStatus.textContent = text;
   elements.apiStatus.className = `status status--${modifier}`;
@@ -129,10 +138,10 @@ function renderEvents() {
       const isActive = event.id === state.selectedEventId;
       return `
         <button class="event-item${isActive ? " event-item--active" : ""}" type="button" data-event-id="${event.id}">
-          <p class="event-item__title">${event.title}</p>
+          <p class="event-item__title">${escapeHtml(event.title)}</p>
           <div class="meta">
             <span class="tag">${formatDate(event.starts_at)}</span>
-            <span class="tag">${event.location}</span>
+            <span class="tag">${escapeHtml(event.location)}</span>
             <span class="tag">${event.ticket_categories_count || 0} кат.</span>
           </div>
         </button>
@@ -141,7 +150,7 @@ function renderEvents() {
     .join("");
 
   elements.eventsList.querySelectorAll("[data-event-id]").forEach((button) => {
-    button.addEventListener("click", () => selectEvent(Number(button.dataset.eventId)));
+    button.addEventListener("click", () => safelyRun(() => selectEvent(Number(button.dataset.eventId))));
   });
 }
 
@@ -163,11 +172,11 @@ function renderEventDetails() {
     <div class="details-grid">
       <div class="detail">
         <span>Название</span>
-        <strong>${state.selectedEvent.title}</strong>
+        <strong>${escapeHtml(state.selectedEvent.title)}</strong>
       </div>
       <div class="detail">
         <span>Место</span>
-        <strong>${state.selectedEvent.location}</strong>
+        <strong>${escapeHtml(state.selectedEvent.location)}</strong>
       </div>
       <div class="detail">
         <span>Начало</span>
@@ -178,7 +187,7 @@ function renderEventDetails() {
         <strong>${availableTickets} из ${totalTickets}</strong>
       </div>
     </div>
-    <p class="description">${state.selectedEvent.description || "Описание не заполнено."}</p>
+    <p class="description">${escapeHtml(state.selectedEvent.description || "Описание не заполнено.")}</p>
   `;
 }
 
@@ -199,7 +208,7 @@ function renderCategories() {
     .map(
       (category) => `
         <tr>
-          <td>${category.name}</td>
+          <td>${escapeHtml(category.name)}</td>
           <td>${formatMoney(category.price)}</td>
           <td>${category.quantity}</td>
           <td>${category.available_quantity}</td>
@@ -210,12 +219,48 @@ function renderCategories() {
 
   elements.bookingCategorySelect.innerHTML = state.categories
     .filter((category) => Number(category.available_quantity) > 0)
-    .map((category) => `<option value="${category.id}">${category.name} - ${formatMoney(category.price)} (${category.available_quantity} доступно)</option>`)
+    .map(
+      (category) =>
+        `<option value="${category.id}">${escapeHtml(category.name)} - ${formatMoney(category.price)} (${category.available_quantity} доступно)</option>`,
+    )
     .join("");
 
   if (!elements.bookingCategorySelect.innerHTML) {
     elements.bookingCategorySelect.innerHTML = '<option value="">Нет доступных билетов</option>';
   }
+}
+
+function renderBookings() {
+  if (!state.bookings.length) {
+    elements.bookingsList.innerHTML = '<div class="empty-state">Бронирования не найдены.</div>';
+    return;
+  }
+
+  elements.bookingsList.innerHTML = state.bookings
+    .map((booking) => {
+      const canChange = booking.status === "reserved";
+      const statusText = statusLabels[booking.status] || booking.status;
+
+      return `
+        <article class="booking-item">
+          <div>
+            <p class="booking-item__title">${escapeHtml(booking.customer_name)} - ${escapeHtml(booking.ticket_category.event.title)}</p>
+            <div class="meta">
+              <span class="tag">${escapeHtml(booking.ticket_category.name)}</span>
+              <span class="tag">${booking.quantity} шт.</span>
+              <span class="tag">${formatMoney(booking.total_price)}</span>
+              <span class="tag">${escapeHtml(booking.customer_email)}</span>
+              <span class="status ${statusClass(booking.status)}">${statusText}</span>
+            </div>
+          </div>
+          <div class="booking-actions">
+            <button class="button button--success" type="button" data-booking-action="pay" data-booking-id="${booking.id}" ${canChange ? "" : "disabled"}>Оплатить</button>
+            <button class="button button--danger" type="button" data-booking-action="cancel" data-booking-id="${booking.id}" ${canChange ? "" : "disabled"}>Отменить</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 async function loadEvents() {
@@ -234,8 +279,10 @@ async function loadEvents() {
   } else {
     state.selectedEvent = null;
     state.categories = [];
+    state.bookings = [];
     renderEventDetails();
     renderCategories();
+    renderBookings();
   }
 
   setApiStatus("API доступен", "ok");
@@ -257,6 +304,7 @@ async function selectEvent(eventId, shouldRenderList = true) {
 
   renderEventDetails();
   renderCategories();
+  await loadBookings(true);
 }
 
 async function createEvent(event) {
@@ -299,6 +347,55 @@ async function createCategory(event) {
   await selectEvent(state.selectedEventId);
 }
 
+async function loadBookings(onlySelectedEvent = false) {
+  const query = onlySelectedEvent && state.selectedEventId ? `?event_id=${state.selectedEventId}` : "";
+  state.bookings = await requestJson(`/bookings${query}`);
+  renderBookings();
+}
+
+async function createBooking(event) {
+  event.preventDefault();
+
+  if (!elements.bookingCategorySelect.value) {
+    showToast("Нет доступной категории билетов", true);
+    return;
+  }
+
+  const data = formToObject(elements.bookingForm);
+
+  await requestJson("/bookings", {
+    method: "POST",
+    body: JSON.stringify({
+      ...data,
+      ticket_category_id: Number(data.ticket_category_id),
+      quantity: Number(data.quantity),
+    }),
+  });
+
+  elements.bookingForm.reset();
+  elements.bookingForm.elements.quantity.value = "1";
+  showToast("Бронирование создано");
+
+  if (state.selectedEventId) {
+    await selectEvent(state.selectedEventId);
+  }
+}
+
+async function updateBookingStatus(bookingId, action) {
+  await requestJson(`/bookings/${bookingId}/${action}`, {
+    method: "PATCH",
+    body: JSON.stringify({}),
+  });
+
+  showToast(action === "cancel" ? "Бронирование отменено" : "Бронирование оплачено");
+
+  if (state.selectedEventId) {
+    await selectEvent(state.selectedEventId);
+  } else {
+    await loadBookings(false);
+  }
+}
+
 async function safelyRun(action) {
   try {
     await action();
@@ -312,5 +409,16 @@ async function safelyRun(action) {
 elements.refreshButton.addEventListener("click", () => safelyRun(loadEvents));
 elements.eventForm.addEventListener("submit", (event) => safelyRun(() => createEvent(event)));
 elements.categoryForm.addEventListener("submit", (event) => safelyRun(() => createCategory(event)));
+elements.bookingForm.addEventListener("submit", (event) => safelyRun(() => createBooking(event)));
+elements.loadBookingsButton.addEventListener("click", () => safelyRun(() => loadBookings(false)));
+elements.bookingsList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-booking-action]");
+
+  if (!button) {
+    return;
+  }
+
+  safelyRun(() => updateBookingStatus(button.dataset.bookingId, button.dataset.bookingAction));
+});
 
 safelyRun(loadEvents);
