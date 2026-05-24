@@ -3,68 +3,162 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticket Booking System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Space+Grotesk:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
+    <title>Бронирование билетов</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="orb orb-a" aria-hidden="true"></div>
-    <div class="orb orb-b" aria-hidden="true"></div>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Ticket Booking System</p>
+        <h1>Бронирование билетов</h1>
+      </div>
+      <div class="topbar__actions">
+        <span id="apiStatus" class="status status--idle">API не проверен</span>
+        <button id="refreshButton" class="button button--primary" type="button">Обновить</button>
+      </div>
+    </header>
 
-    <main class="shell">
-      <header class="hero">
-        <p class="kicker">Ticket Booking System</p>
-        <h1>Сервис бронирования и продажи билетов</h1>
-        <p class="lead">
-          Фронтенд находится в разработке. Это минимальная заглушка, чтобы
-          проект выглядел живым и был удобен для проверки.
-        </p>
-
-        <div class="actions">
-          <a
-            id="openBackend"
-            class="btn btn-primary"
-            href="http://127.0.0.1:8000/"
-            target="_blank"
-            rel="noreferrer"
-            >Открыть backend</a
-          >
-          <button id="checkBackend" class="btn btn-ghost" type="button">
-            Проверить backend
-          </button>
+    <main class="workspace">
+      <section class="panel panel--events" aria-labelledby="eventsTitle">
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow">Мероприятия</p>
+            <h2 id="eventsTitle">Список</h2>
+          </div>
+          <span id="eventsCount" class="counter">0</span>
         </div>
-      </header>
 
-      <section class="panel">
-        <h2>Статус окружения</h2>
-        <ul class="status-list">
-          <li>
-            <span>Frontend</span>
-            <strong>Заглушка активна</strong>
-          </li>
-          <li>
-            <span>Backend URL</span>
-            <code>http://127.0.0.1:8000/</code>
-          </li>
-          <li>
-            <span>Проверка</span>
-            <strong id="statusBadge" class="badge">Не проверено</strong>
-          </li>
-        </ul>
-        <p id="statusText" class="muted">
-          Нажмите «Проверить backend», чтобы проверить доступность сервера.
-        </p>
+        <div id="eventsList" class="event-list" aria-live="polite"></div>
+
+        <form id="eventForm" class="form form--stacked">
+          <h3>Новое мероприятие</h3>
+          <label>
+            Название
+            <input name="title" type="text" required maxlength="255" />
+          </label>
+          <label>
+            Место
+            <input name="location" type="text" required maxlength="255" />
+          </label>
+          <label>
+            Дата и время
+            <input name="starts_at" type="datetime-local" required />
+          </label>
+          <label>
+            Статус
+            <select name="status">
+              <option value="draft">Черновик</option>
+              <option value="published" selected>Опубликовано</option>
+              <option value="finished">Завершено</option>
+              <option value="cancelled">Отменено</option>
+            </select>
+          </label>
+          <label>
+            Описание
+            <textarea name="description" rows="3"></textarea>
+          </label>
+          <button class="button button--primary" type="submit">Создать</button>
+        </form>
       </section>
 
-      <footer class="foot">
-        Быстров Егор 3-1ИС <time id="buildTime"></time>
-      </footer>
+      <section class="main-column">
+        <section class="panel" aria-labelledby="eventDetailsTitle">
+          <div class="panel__header">
+            <div>
+              <p class="eyebrow">Выбранное мероприятие</p>
+              <h2 id="eventDetailsTitle">Детали</h2>
+            </div>
+            <span id="eventStatus" class="status status--idle">Нет выбора</span>
+          </div>
+          <div id="eventDetails" class="details-empty">Выберите мероприятие из списка.</div>
+        </section>
+
+        <section class="panel" aria-labelledby="categoriesTitle">
+          <div class="panel__header">
+            <div>
+              <p class="eyebrow">Билеты</p>
+              <h2 id="categoriesTitle">Категории</h2>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Категория</th>
+                  <th>Цена</th>
+                  <th>Всего</th>
+                  <th>Доступно</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTable"></tbody>
+            </table>
+          </div>
+
+          <form id="categoryForm" class="form form--inline">
+            <label>
+              Категория
+              <input name="name" type="text" required maxlength="255" />
+            </label>
+            <label>
+              Цена
+              <input name="price" type="number" min="0" step="0.01" required />
+            </label>
+            <label>
+              Количество
+              <input name="quantity" type="number" min="1" step="1" required />
+            </label>
+            <button class="button" type="submit">Добавить</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="bookingTitle">
+          <div class="panel__header">
+            <div>
+              <p class="eyebrow">Бронирование</p>
+              <h2 id="bookingTitle">Заявка клиента</h2>
+            </div>
+          </div>
+
+          <form id="bookingForm" class="form form--grid">
+            <label>
+              Категория
+              <select name="ticket_category_id" required></select>
+            </label>
+            <label>
+              Количество
+              <input name="quantity" type="number" min="1" step="1" value="1" required />
+            </label>
+            <label>
+              Имя клиента
+              <input name="customer_name" type="text" required maxlength="255" />
+            </label>
+            <label>
+              Почта
+              <input name="customer_email" type="email" required maxlength="255" />
+            </label>
+            <label>
+              Телефон
+              <input name="customer_phone" type="tel" required maxlength="50" />
+            </label>
+            <button class="button button--primary" type="submit">Забронировать</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="bookingsTitle">
+          <div class="panel__header">
+            <div>
+              <p class="eyebrow">Журнал</p>
+              <h2 id="bookingsTitle">Бронирования</h2>
+            </div>
+            <button id="loadBookingsButton" class="button" type="button">Показать все</button>
+          </div>
+          <div id="bookingsList" class="booking-list" aria-live="polite"></div>
+        </section>
+      </section>
     </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script type="module" src="./app.js"></script>
   </body>
