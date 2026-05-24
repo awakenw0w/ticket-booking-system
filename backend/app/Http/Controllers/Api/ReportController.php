@@ -45,8 +45,8 @@ class ReportController extends Controller
     {
         $data = $this->validatedFilters($request);
         $query = $this->filteredBookings($data, 'paid_at')
-            ->where('status', 'paid')
-            ->whereNotNull('paid_at');
+            ->where('bookings.status', 'paid')
+            ->whereNotNull('bookings.paid_at');
 
         $summary = [
             'paid_bookings_count' => (clone $query)->count(),
@@ -153,9 +153,9 @@ class ReportController extends Controller
     private function filteredBookings(array $filters, string $dateColumn): Builder
     {
         return Booking::query()
-            ->when(isset($filters['date_from']), fn (Builder $query) => $query->whereDate($dateColumn, '>=', $filters['date_from']))
-            ->when(isset($filters['date_to']), fn (Builder $query) => $query->whereDate($dateColumn, '<=', $filters['date_to']))
-            ->when(isset($filters['status']), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when(isset($filters['date_from']), fn (Builder $query) => $query->whereDate("bookings.{$dateColumn}", '>=', $filters['date_from']))
+            ->when(isset($filters['date_to']), fn (Builder $query) => $query->whereDate("bookings.{$dateColumn}", '<=', $filters['date_to']))
+            ->when(isset($filters['status']), fn (Builder $query) => $query->where('bookings.status', $filters['status']))
             ->when(isset($filters['event_id']), function (Builder $query) use ($filters) {
                 $query->whereHas('ticketCategory', fn (Builder $categoryQuery) => $categoryQuery->where('event_id', $filters['event_id']));
             });
