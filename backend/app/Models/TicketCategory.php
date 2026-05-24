@@ -32,4 +32,16 @@ class TicketCategory extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function activeBookedQuantity(): int
+    {
+        return (int) $this->bookings()
+            ->whereIn('status', ['reserved', 'paid'])
+            ->sum('quantity');
+    }
+
+    public function availableQuantity(): int
+    {
+        return max(0, $this->quantity - $this->activeBookedQuantity());
+    }
 }
