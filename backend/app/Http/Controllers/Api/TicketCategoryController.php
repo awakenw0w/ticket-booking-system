@@ -75,11 +75,23 @@ class TicketCategoryController extends Controller
                 ->ignore($ticketCategory),
         ];
 
-        return $request->validate([
-            'name' => $nameRules,
-            'price' => [$ticketCategory ? 'sometimes' : 'required', 'numeric', 'min:0'],
-            'quantity' => [$ticketCategory ? 'sometimes' : 'required', 'integer', 'min:1'],
-        ]);
+        return $request->validate(
+            [
+                'name' => $nameRules,
+                'price' => [$ticketCategory ? 'sometimes' : 'required', 'numeric', 'min:0'],
+                'quantity' => [$ticketCategory ? 'sometimes' : 'required', 'integer', 'min:1'],
+            ],
+            [
+                'name.required' => 'Введите название категории билетов.',
+                'name.unique' => 'Такая категория уже есть у выбранного мероприятия.',
+                'price.required' => 'Введите цену билета.',
+                'price.numeric' => 'Цена билета должна быть числом.',
+                'price.min' => 'Цена билета не может быть отрицательной.',
+                'quantity.required' => 'Введите количество билетов.',
+                'quantity.integer' => 'Количество билетов должно быть целым числом.',
+                'quantity.min' => 'Количество билетов должно быть больше 0.',
+            ],
+        );
     }
 
     /**

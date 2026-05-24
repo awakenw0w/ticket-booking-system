@@ -35,7 +35,7 @@ class BookingController extends Controller
             'customer_email' => ['required', 'email', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:50'],
             'quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        ], $this->validationMessages());
 
         $ticketCategory = TicketCategory::query()->findOrFail($data['ticket_category_id']);
 
@@ -73,7 +73,7 @@ class BookingController extends Controller
             'customer_email' => ['sometimes', 'email', 'max:255'],
             'customer_phone' => ['sometimes', 'string', 'max:50'],
             'quantity' => ['sometimes', 'integer', 'min:1'],
-        ]);
+        ], $this->validationMessages());
 
         $ticketCategory = TicketCategory::query()->findOrFail(
             $data['ticket_category_id'] ?? $booking->ticket_category_id
@@ -155,6 +155,25 @@ class BookingController extends Controller
                 'quantity' => ["Доступно билетов: {$availableQuantity}."],
             ],
         ], 422);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'ticket_category_id.required' => 'Выберите категорию билетов.',
+            'ticket_category_id.exists' => 'Выбранная категория билетов не найдена.',
+            'customer_name.required' => 'Введите имя клиента.',
+            'customer_email.required' => 'Введите почту клиента.',
+            'customer_email.email' => 'Введите корректную почту клиента.',
+            'customer_phone.required' => 'Введите телефон клиента.',
+            'customer_phone.max' => 'Телефон не должен быть длиннее 50 символов.',
+            'quantity.required' => 'Введите количество билетов.',
+            'quantity.integer' => 'Количество билетов должно быть целым числом.',
+            'quantity.min' => 'Количество билетов должно быть больше 0.',
+        ];
     }
 
     /**

@@ -77,9 +77,15 @@ class ReportController extends Controller
 
     public function eventsOccupancy(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'event_id' => ['nullable', 'integer', 'exists:events,id'],
-        ]);
+        $data = $request->validate(
+            [
+                'event_id' => ['nullable', 'integer', 'exists:events,id'],
+            ],
+            [
+                'event_id.integer' => 'Идентификатор мероприятия должен быть числом.',
+                'event_id.exists' => 'Выбранное мероприятие не найдено.',
+            ],
+        );
 
         $events = Event::query()
             ->with('ticketCategories.bookings')
@@ -138,12 +144,22 @@ class ReportController extends Controller
      */
     private function validatedFilters(Request $request, bool $allowStatus = false): array
     {
-        return $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-            'event_id' => ['nullable', 'integer', 'exists:events,id'],
-            'status' => [$allowStatus ? 'nullable' : 'prohibited', 'in:reserved,cancelled,paid'],
-        ]);
+        return $request->validate(
+            [
+                'date_from' => ['nullable', 'date'],
+                'date_to' => ['nullable', 'date'],
+                'event_id' => ['nullable', 'integer', 'exists:events,id'],
+                'status' => [$allowStatus ? 'nullable' : 'prohibited', 'in:reserved,cancelled,paid'],
+            ],
+            [
+                'date_from.date' => 'Дата начала периода должна быть корректной.',
+                'date_to.date' => 'Дата окончания периода должна быть корректной.',
+                'event_id.integer' => 'Идентификатор мероприятия должен быть числом.',
+                'event_id.exists' => 'Выбранное мероприятие не найдено.',
+                'status.in' => 'Выберите корректный статус бронирования.',
+                'status.prohibited' => 'Этот отчет не поддерживает фильтр по статусу.',
+            ],
+        );
     }
 
     /**

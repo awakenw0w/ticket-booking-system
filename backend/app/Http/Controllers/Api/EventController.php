@@ -52,12 +52,23 @@ class EventController extends Controller
      */
     private function validatedData(Request $request): array
     {
-        return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'location' => ['required', 'string', 'max:255'],
-            'starts_at' => ['required', 'date'],
-            'status' => ['required', 'string', 'in:draft,published,finished,cancelled'],
-        ]);
+        return $request->validate(
+            [
+                'title' => ['required', 'string', 'max:255'],
+                'description' => ['nullable', 'string'],
+                'location' => ['required', 'string', 'max:255'],
+                'starts_at' => ['required', 'date'],
+                'status' => ['required', 'string', 'in:draft,published,finished,cancelled'],
+            ],
+            [
+                'title.required' => 'Введите название мероприятия.',
+                'title.max' => 'Название мероприятия не должно быть длиннее 255 символов.',
+                'location.required' => 'Введите место проведения.',
+                'starts_at.required' => 'Введите дату и время мероприятия.',
+                'starts_at.date' => 'Дата и время мероприятия должны быть корректными.',
+                'status.required' => 'Выберите статус мероприятия.',
+                'status.in' => 'Выберите корректный статус мероприятия.',
+            ],
+        );
     }
 }
