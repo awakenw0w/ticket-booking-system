@@ -312,6 +312,12 @@ th {
   grid-template-columns: repeat(2, minmax(180px, 1fr));
 }
 
+.form--reports {
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  align-items: end;
+  margin-bottom: 14px;
+}
+
 .form--grid .button {
   align-self: end;
 }
@@ -361,6 +367,51 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.report-cards--compact {
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.report-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  padding: 12px;
+  min-width: 0;
+}
+
+.report-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.report-card strong {
+  display: block;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.report-grid h3,
+.panel h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
 .toast {
   position: fixed;
   right: 18px;
@@ -399,7 +450,11 @@ textarea:focus {
 
   .details-grid,
   .form--inline,
-  .form--grid {
+  .form--grid,
+  .form--reports,
+  .report-grid,
+  .report-cards,
+  .report-cards--compact {
     grid-template-columns: 1fr;
   }
 

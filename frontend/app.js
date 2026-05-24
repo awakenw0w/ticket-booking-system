@@ -22,6 +22,12 @@ const elements = {
   bookingCategorySelect: document.querySelector("[name='ticket_category_id']"),
   loadBookingsButton: document.getElementById("loadBookingsButton"),
   bookingsList: document.getElementById("bookingsList"),
+  reportsForm: document.getElementById("reportsForm"),
+  bookingsReportCards: document.getElementById("bookingsReportCards"),
+  statusReportTable: document.getElementById("statusReportTable"),
+  revenueReportCards: document.getElementById("revenueReportCards"),
+  revenueReportTable: document.getElementById("revenueReportTable"),
+  occupancyReportTable: document.getElementById("occupancyReportTable"),
   toast: document.getElementById("toast"),
 };
 
@@ -150,7 +156,12 @@ function renderEvents() {
     .join("");
 
   elements.eventsList.querySelectorAll("[data-event-id]").forEach((button) => {
-    button.addEventListener("click", () => safelyRun(() => selectEvent(Number(button.dataset.eventId))));
+    button.addEventListener("click", () =>
+      safelyRun(async () => {
+        await selectEvent(Number(button.dataset.eventId));
+        await loadReports();
+      }),
+    );
   });
 }
 
@@ -263,6 +274,106 @@ function renderBookings() {
     .join("");
 }
 
+function reportCard(label, value) {
+  return `
+    <div class="report-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </div>
+  `;
+}
+
+function queryString(params) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+
+  const value = query.toString();
+
+  return value ? `?${value}` : "";
+}
+
+function reportFilters(includeStatus = false) {
+  const data = formToObject(elements.reportsForm);
+  const filters = {
+    date_from: data.date_from,
+    date_to: data.date_to,
+  };
+
+  if (includeStatus) {
+    filters.status = data.status;
+  }
+
+  if (data.event_scope === "selected" && state.selectedEventId) {
+    filters.event_id = state.selectedEventId;
+  }
+
+  return filters;
+}
+
+function renderReports(bookingsReport, revenueReport, occupancyReport) {
+  elements.bookingsReportCards.innerHTML = [
+    reportCard("Всего бронирований", bookingsReport.summary.bookings_count),
+    reportCard("Билетов в бронях", bookingsReport.summary.tickets_count),
+    reportCard("Сумма броней", formatMoney(bookingsReport.summary.total_amount)),
+  ].join("");
+
+  elements.statusReportTable.innerHTML = bookingsReport.by_status.length
+    ? bookingsReport.by_status
+        .map(
+          (row) => `
+            <tr>
+              <td>${statusLabels[row.status] || row.status}</td>
+              <td>${row.bookings_count}</td>
+              <td>${row.tickets_count}</td>
+              <td>${formatMoney(row.total_amount)}</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : '<tr><td colspan="4">Нет данных по выбранным фильтрам.</td></tr>';
+
+  elements.revenueReportCards.innerHTML = [
+    reportCard("Оплаченных броней", revenueReport.summary.paid_bookings_count),
+    reportCard("Выручка", formatMoney(revenueReport.summary.total_revenue)),
+  ].join("");
+
+  elements.revenueReportTable.innerHTML = revenueReport.by_events.length
+    ? revenueReport.by_events
+        .map(
+          (row) => `
+            <tr>
+              <td>${escapeHtml(row.event_title)}</td>
+              <td>${row.paid_bookings_count}</td>
+              <td>${row.paid_tickets_count}</td>
+              <td>${formatMoney(row.revenue)}</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : '<tr><td colspan="4">Оплаченных бронирований нет.</td></tr>';
+
+  elements.occupancyReportTable.innerHTML = occupancyReport.events.length
+    ? occupancyReport.events
+        .map(
+          (event) => `
+            <tr>
+              <td>${escapeHtml(event.event_title)}</td>
+              <td>${event.total_tickets}</td>
+              <td>${event.active_tickets}</td>
+              <td>${event.available_tickets}</td>
+              <td>${event.occupancy_percent}%</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : '<tr><td colspan="5">Нет мероприятий для отчета.</td></tr>';
+}
+
 async function loadEvents() {
   setApiStatus("Загрузка", "warn");
 
@@ -285,6 +396,7 @@ async function loadEvents() {
     renderBookings();
   }
 
+  await loadReports();
   setApiStatus("API доступен", "ok");
 }
 
@@ -345,6 +457,7 @@ async function createCategory(event) {
   elements.categoryForm.reset();
   showToast("Категория добавлена");
   await selectEvent(state.selectedEventId);
+  await loadReports();
 }
 
 async function loadBookings(onlySelectedEvent = false) {
@@ -379,6 +492,8 @@ async function createBooking(event) {
   if (state.selectedEventId) {
     await selectEvent(state.selectedEventId);
   }
+
+  await loadReports();
 }
 
 async function updateBookingStatus(bookingId, action) {
@@ -394,6 +509,24 @@ async function updateBookingStatus(bookingId, action) {
   } else {
     await loadBookings(false);
   }
+
+  await loadReports();
+}
+
+async function loadReports(event) {
+  event?.preventDefault();
+
+  const [bookingsReport, revenueReport, occupancyReport] = await Promise.all([
+    requestJson(`/reports/bookings${queryString(reportFilters(true))}`),
+    requestJson(`/reports/revenue${queryString(reportFilters(false))}`),
+    requestJson(
+      `/reports/events-occupancy${queryString({
+        event_id: reportFilters(false).event_id,
+      })}`,
+    ),
+  ]);
+
+  renderReports(bookingsReport, revenueReport, occupancyReport);
 }
 
 async function safelyRun(action) {
@@ -410,6 +543,7 @@ elements.refreshButton.addEventListener("click", () => safelyRun(loadEvents));
 elements.eventForm.addEventListener("submit", (event) => safelyRun(() => createEvent(event)));
 elements.categoryForm.addEventListener("submit", (event) => safelyRun(() => createCategory(event)));
 elements.bookingForm.addEventListener("submit", (event) => safelyRun(() => createBooking(event)));
+elements.reportsForm.addEventListener("submit", (event) => safelyRun(() => loadReports(event)));
 elements.loadBookingsButton.addEventListener("click", () => safelyRun(() => loadBookings(false)));
 elements.bookingsList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-booking-action]");

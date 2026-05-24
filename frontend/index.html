@@ -155,6 +155,98 @@
           </div>
           <div id="bookingsList" class="booking-list" aria-live="polite"></div>
         </section>
+
+        <section class="panel" aria-labelledby="reportsTitle">
+          <div class="panel__header">
+            <div>
+              <p class="eyebrow">Аналитика</p>
+              <h2 id="reportsTitle">Отчеты</h2>
+            </div>
+          </div>
+
+          <form id="reportsForm" class="form form--reports">
+            <label>
+              Период с
+              <input name="date_from" type="date" />
+            </label>
+            <label>
+              Период до
+              <input name="date_to" type="date" />
+            </label>
+            <label>
+              Статус
+              <select name="status">
+                <option value="">Все статусы</option>
+                <option value="reserved">Бронь</option>
+                <option value="paid">Оплачено</option>
+                <option value="cancelled">Отменено</option>
+              </select>
+            </label>
+            <label>
+              Мероприятие
+              <select name="event_scope">
+                <option value="all">Все</option>
+                <option value="selected">Выбранное</option>
+              </select>
+            </label>
+            <button class="button" type="submit">Обновить отчеты</button>
+          </form>
+
+          <div id="bookingsReportCards" class="report-cards"></div>
+
+          <div class="report-grid">
+            <div>
+              <h3>Бронирования по статусам</h3>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Статус</th>
+                      <th>Брони</th>
+                      <th>Билеты</th>
+                      <th>Сумма</th>
+                    </tr>
+                  </thead>
+                  <tbody id="statusReportTable"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h3>Выручка по мероприятиям</h3>
+              <div id="revenueReportCards" class="report-cards report-cards--compact"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Мероприятие</th>
+                      <th>Брони</th>
+                      <th>Билеты</th>
+                      <th>Выручка</th>
+                    </tr>
+                  </thead>
+                  <tbody id="revenueReportTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <h3>Заполненность мероприятий</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Мероприятие</th>
+                  <th>Всего</th>
+                  <th>Активно</th>
+                  <th>Доступно</th>
+                  <th>Заполненность</th>
+                </tr>
+              </thead>
+              <tbody id="occupancyReportTable"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </main>
 
