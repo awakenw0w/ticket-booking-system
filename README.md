@@ -44,6 +44,19 @@ php artisan test
 
 Тесты проверяют структуру доменной БД, тестовые данные и связи между бронированиями, пользователями, категориями билетов и мероприятиями.
 
+## API
+
+После запуска backend доступны маршруты:
+
+- `GET|POST /api/events`
+- `GET|PATCH|DELETE /api/events/{event}`
+- `GET|POST /api/events/{event}/ticket-categories`
+- `GET|PATCH|DELETE /api/ticket-categories/{ticketCategory}`
+- `GET|POST /api/bookings`
+- `GET|PATCH|DELETE /api/bookings/{booking}`
+- `PATCH /api/bookings/{booking}/cancel`
+- `PATCH /api/bookings/{booking}/pay`
+
 ## Frontend
 
 Пока frontend является минимальной стартовой страницей.
@@ -73,6 +86,6 @@ docs/      требования, модель данных, API и ПЗ
 
 ## Текущий этап
 
-Этап 1: подготовлены требования, MVP, модель данных, связи Eloquent, тестовые данные и базовая документация.
+Этап 2: реализован backend API и CRUD для мероприятий, категорий билетов и бронирований.
 
-Следующий этап: реализация API и CRUD для мероприятий, категорий билетов и бронирований.
+Следующий этап: подключение frontend к API и реализация экранов MVP.
