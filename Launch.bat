@@ -29,8 +29,8 @@ if not exist "%FRONTEND%" (
 cd /d "%BACKEND%"
 
 echo [1/6] Checking PHP dependencies...
-if not exist "%BACKEND%\vendor" (
-    echo vendor folder was not found. Running composer install...
+if not exist "%BACKEND%\vendor\autoload.php" (
+    echo Laravel autoload.php was not found. Running composer install...
     composer install --no-interaction --no-progress
     if errorlevel 1 (
         echo composer install failed.
@@ -56,10 +56,20 @@ echo.
 echo [3/6] Checking application key...
 if "%NEED_KEY%"=="1" (
     php artisan key:generate --force
+    if errorlevel 1 (
+        echo Application key generation failed.
+        pause
+        exit /b 1
+    )
 ) else (
     findstr /C:"APP_KEY=base64:" "%BACKEND%\.env" > nul
     if errorlevel 1 (
         php artisan key:generate --force
+        if errorlevel 1 (
+            echo Application key generation failed.
+            pause
+            exit /b 1
+        )
     ) else (
         echo APP_KEY is already set.
     )
