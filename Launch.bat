@@ -10,7 +10,7 @@ echo Starting backend setup...
 echo.
 
 cd /d "%PROJECT%backend"
-composer install
+composer install --no-dev --no-interaction --no-progress --prefer-dist
 copy .env.example .env /Y
 php artisan key:generate --force
 type nul > ".\database\database.sqlite"
