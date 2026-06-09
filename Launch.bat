@@ -27,11 +27,17 @@ echo Starting frontend server...
 start "Ticket Booking Frontend" cmd /k "cd /d "%PROJECT%frontend" && python -m http.server 5173 --bind 127.0.0.1"
 
 echo.
-echo Project started.
-echo Frontend: http://127.0.0.1:5173
-echo Backend:  http://127.0.0.1:8000
+echo ================================================
+echo PROJECT STARTED
 echo.
-echo Open this URL in browser:
+echo Open frontend in browser:
+echo http://127.0.0.1:5173
+echo.
+echo Backend address:
+echo http://127.0.0.1:8000
+echo ================================================
+echo.
+echo Copy this link and open it in browser:
 echo http://127.0.0.1:5173
 echo.
 pause
